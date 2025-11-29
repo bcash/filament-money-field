@@ -40,21 +40,48 @@ class MoneyInput extends TextInput
         $this->formatStateUsing(function (MoneyInput $component, mixed $state): string {
             $this->prepare();
 
+            \Illuminate\Support\Facades\Log::debug('MoneyInput formatStateUsing', [
+                'field' => $component->getName(),
+                'raw_state' => $state,
+                'state_type' => gettype($state),
+            ]);
+
             if ($state === null || $state === '') {
                 return '';
             }
 
-            return $component->formatMoney($state);
+            $formatted = $component->formatMoney($state);
+
+            \Illuminate\Support\Facades\Log::debug('MoneyInput formatStateUsing result', [
+                'field' => $component->getName(),
+                'formatted' => $formatted,
+            ]);
+
+            return $formatted;
         });
 
         // Convert display value back to cents when saving
         // Returns string to match varchar database columns used by MoneyPHP
         $this->dehydrateStateUsing(function (MoneyInput $component, null|int|string $state): ?string {
+            \Illuminate\Support\Facades\Log::debug('MoneyInput dehydrateStateUsing', [
+                'field' => $component->getName(),
+                'input_state' => $state,
+                'input_type' => gettype($state),
+            ]);
+
             if ($state === null || $state === '') {
+                \Illuminate\Support\Facades\Log::debug('MoneyInput dehydrateStateUsing - returning null (empty state)');
                 return null;
             }
 
-            return (string) $component->parseMoney((string) $state);
+            $cents = (string) $component->parseMoney((string) $state);
+
+            \Illuminate\Support\Facades\Log::debug('MoneyInput dehydrateStateUsing result', [
+                'field' => $component->getName(),
+                'cents' => $cents,
+            ]);
+
+            return $cents;
         });
     }
 
