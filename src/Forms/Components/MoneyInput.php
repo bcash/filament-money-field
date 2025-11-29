@@ -99,8 +99,9 @@ class MoneyInput extends TextInput
             default => $this->suffix(null)->prefix(null),
         };
 
-        $this->numeric()
-            ->inputMode('decimal')
+        // Don't use numeric() as it converts to integer and strips decimals
+        // Instead, just set the input mode for mobile keyboards
+        $this->inputMode('decimal')
             ->extraInputAttributes(['class' => 'text-right']);
     }
 
