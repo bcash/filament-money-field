@@ -113,11 +113,9 @@ trait HasMoneyAttributes
         // Convert cents to dollars
         $value = $amount / pow(10, $decimals);
 
-        $formatter = new \NumberFormatter($this->getLocale(), \NumberFormatter::DECIMAL);
-        $formatter->setAttribute(\NumberFormatter::MIN_FRACTION_DIGITS, $decimals);
-        $formatter->setAttribute(\NumberFormatter::MAX_FRACTION_DIGITS, $decimals);
-
-        return $formatter->format($value);
+        // Use number_format for reliable decimal display in form inputs
+        // This ensures "9.00" instead of "9" for whole dollar amounts
+        return number_format($value, $decimals, '.', '');
     }
 
     /**
