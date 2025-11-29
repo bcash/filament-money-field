@@ -48,12 +48,13 @@ class MoneyInput extends TextInput
         });
 
         // Convert display value back to cents when saving
-        $this->dehydrateStateUsing(function (MoneyInput $component, null|int|string $state): ?int {
+        // Returns string to match varchar database columns used by MoneyPHP
+        $this->dehydrateStateUsing(function (MoneyInput $component, null|int|string $state): ?string {
             if ($state === null || $state === '') {
                 return null;
             }
 
-            return $component->parseMoney((string) $state);
+            return (string) $component->parseMoney((string) $state);
         });
     }
 
