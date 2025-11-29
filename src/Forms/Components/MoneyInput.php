@@ -1,29 +1,34 @@
 <?php
 
-namespace Pelmered\FilamentMoneyField\Forms\Components;
+namespace Bcash\FilamentMoneyField\Forms\Components;
 
-use Filament\Actions\Action;
-use Filament\Forms\Components\Select;
+use Bcash\FilamentMoneyField\Concerns\HasMoneyAttributes;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Form;
-use Filament\Support\RawJs;
-use Illuminate\Database\Eloquent\Model;
-use Money\Money;
-use Pelmered\FilamentMoneyField\Concerns\HasMoneyAttributes;
-use Pelmered\FilamentMoneyField\Forms\Rules\MaxValueRule;
-use Pelmered\FilamentMoneyField\Forms\Rules\MinValueRule;
-use Pelmered\LaraPara\Currencies\Currency;
-use Pelmered\LaraPara\Currencies\CurrencyRepository;
-use Pelmered\LaraPara\Enum\CurrencySymbolPlacement;
-use Pelmered\LaraPara\MoneyFormatter\MoneyFormatter;
 
+/**
+ * Money input component for Filament forms.
+ *
+ * Handles money values stored as integers (cents) in the database.
+ * Displays formatted currency values to users and converts input
+ * back to cents for storage.
+ *
+ * Usage:
+ *   MoneyInput::make('price')
+ *       ->label('Price')
+ *       ->currency('USD')
+ *       ->required()
+ *
+ * The value is stored as cents (integer) in the database:
+ * - User enters: $12.34
+ * - Stored value: 1234
+ *
+ * @see \Bcash\FilamentMoneyField\Tables\Columns\MoneyColumn
+ */
 class MoneyInput extends TextInput
 {
     use HasMoneyAttributes;
 
     protected ?string $symbolPlacement = null;
-
-    protected ?bool $currencySwitcher = null;
 
     protected function setUp(): void
     {
@@ -31,115 +36,64 @@ class MoneyInput extends TextInput
 
         $this->prepare();
 
-        $this->suffixAction(function (MoneyInput $component): Action | null {
-            if ($component->shouldHaveCurrencySwitcher()) {
-                $currencies = CurrencyRepository::getAvailableCurrencies();
-
-                return Action::make('changeCurrency')
-                    ->icon('heroicon-m-arrow-path')
-                    ->tooltip('Change currency')
-                    ->form([
-                        Select::make('currency')
-                            ->label('Currency')
-                            ->options($currencies->toSelectArray())
-                            ->required()
-                            ->live(),
-                    ])
-                    ->action(function (array $data, MoneyInput $component, Model $record, Form $form): void {
-                        $money    = $record->{$component->name};
-                        $currency = $data['currency'];
-
-                        $record->{$component->name} = new Money(
-                            $money->getAmount(),
-                            Currency::fromCode($currency)->toMoneyCurrency()
-                        );
-
-                        $record->save();
-                    });
-            }
-
-            return null;
-        });
-
+        // Format the stored cents value to display format when loading
         $this->formatStateUsing(function (MoneyInput $component, mixed $state): string {
-
             $this->prepare();
 
-            if (! $state instanceof Money) {
+            if ($state === null || $state === '') {
                 return '';
             }
 
-            $amount   = $state->getAmount();
-            $currency = Currency::fromMoney($state);
-            $locale   = $component->getLocale();
-
-            return MoneyFormatter::numberFormat((int) $amount, $locale, $this->getDecimals());
+            return $component->formatMoney($state);
         });
 
-        $this->dehydrateStateUsing(function (MoneyInput $component, null|int|string $state): ?Money {
-            if (! $state) {
+        // Convert display value back to cents when saving
+        $this->dehydrateStateUsing(function (MoneyInput $component, null|int|string $state): ?int {
+            if ($state === null || $state === '') {
                 return null;
             }
 
-            $currency = $component->getCurrency();
-            $amount   = MoneyFormatter::parseDecimal((string) $state, $currency, $component->getLocale(), $this->getDecimals());
-
-            return new Money((int) $amount, $currency->toMoneyCurrency());
+            return $component->parseMoney((string) $state);
         });
     }
 
+    /**
+     * Prepare the component with currency symbol placement.
+     */
     protected function prepare(): void
     {
-        $this->currencyColumn = $this->name.config('larapara.currency_column_suffix', '_currency');
-        $symbolPlacement      = $this->getSymbolPlacement();
-        $getCurrencySymbol    = function (MoneyInput $component): string {
-            return MoneyFormatter::getFormattingRules(
-                $component->getLocale(),
-                $component->getCurrency()
-            )->currencySymbol;
-        };
+        $symbolPlacement = $this->getSymbolPlacement();
+        $getCurrencySymbol = fn (MoneyInput $component): string => $component->getCurrencySymbol();
 
         match ($symbolPlacement) {
             'before' => $this->prefix($getCurrencySymbol)->suffix(null),
-            'after'  => $this->suffix($getCurrencySymbol)->prefix(null),
-            default  => $this->suffix(null)->prefix(null),
+            'after' => $this->suffix($getCurrencySymbol)->prefix(null),
+            default => $this->suffix(null)->prefix(null),
         };
 
-        if (config('filament-money-field.use_input_mask')) {
-            $this->mask(function (MoneyInput $component): \Filament\Support\RawJs {
-                $formattingRules = MoneyFormatter::getFormattingRules(
-                    $component->getLocale(),
-                    $component->getCurrency()
-                );
-
-                return RawJs::make(
-                    strtr(
-                        '$money($input, \'{decimalSeparator}\', \'{groupingSeparator}\', {fractionDigits})',
-                        [
-                            '{decimalSeparator}'  => $formattingRules->decimalSeparator,
-                            '{groupingSeparator}' => $formattingRules->groupingSeparator,
-                            '{fractionDigits}'    => $formattingRules->fractionDigits,
-                        ]
-                    )
-                );
-            });
-        }
+        $this->numeric()
+            ->inputMode('decimal')
+            ->extraInputAttributes(['class' => 'text-right']);
     }
 
+    /**
+     * Get the symbol placement setting.
+     */
     public function getSymbolPlacement(): string
     {
-        return $this->symbolPlacement ?? config('filament-money-field.form_currency_symbol_placement', CurrencySymbolPlacement::Before->value);
+        return $this->symbolPlacement ?? config('filament-money-field.form_currency_symbol_placement', 'before');
     }
 
-    public function symbolPlacement(CurrencySymbolPlacement|string $placement): static
+    /**
+     * Set the symbol placement.
+     *
+     * @param string $placement One of: 'before', 'after', 'hidden'
+     */
+    public function symbolPlacement(string $placement): static
     {
-        if ($placement instanceof CurrencySymbolPlacement) {
-            $placement = $placement->value;
-        }
-
-        if (! in_array($placement, CurrencySymbolPlacement::values())) {
+        if (! in_array($placement, ['before', 'after', 'hidden'])) {
             throw new \InvalidArgumentException(
-                'Currency symbol placement must be one of: '.implode(', ', CurrencySymbolPlacement::values())
+                'Currency symbol placement must be one of: before, after, hidden'
             );
         }
 
@@ -148,54 +102,40 @@ class MoneyInput extends TextInput
         return $this;
     }
 
+    /**
+     * Hide the currency symbol.
+     */
     public function hideCurrencySymbol(): static
     {
-        return $this->symbolPlacement(CurrencySymbolPlacement::Hidden->value);
+        return $this->symbolPlacement('hidden');
     }
 
-    public function minValue(mixed $value): static
+    /**
+     * Set the minimum value in cents.
+     */
+    public function minValue(int $value): static
     {
         $this->minValue = $value;
 
-        $this->rule(
-            static function (MoneyInput $component): MinValueRule {
-                return new MinValueRule((int) $component->getMinValue(), $component);
-            },
-            static fn (MoneyInput $component): bool => filled($component->getMinValue())
-        );
-
         return $this;
     }
 
-    public function maxValue(mixed $value): static
+    /**
+     * Set the maximum value in cents.
+     */
+    public function maxValue(int $value): static
     {
         $this->maxValue = $value;
 
-        $this->rule(
-            static function (MoneyInput $component): MaxValueRule {
-                return new MaxValueRule((int) $component->getMaxValue(), $component);
-            },
-            static fn (MoneyInput $component): bool => filled($component->getMaxValue())
-        );
-
         return $this;
     }
 
-    protected function shouldHaveCurrencySwitcher(): bool
+    /**
+     * Set the step value for increment/decrement.
+     */
+    public function step(int $step): static
     {
-        return $this->currencySwitcher ?? config('filament-money-field.currency_switcher_enabled_default', true);
-    }
-
-    public function currencySwitcherEnabled(): static
-    {
-        $this->currencySwitcher = true;
-
-        return $this;
-    }
-
-    public function currencySwitcherDisabled(): static
-    {
-        $this->currencySwitcher = false;
+        $this->step = $step;
 
         return $this;
     }

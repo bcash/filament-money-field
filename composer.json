@@ -1,24 +1,26 @@
 {
-    "name": "pelmered/filament-money-field",
+    "name": "bcash/filament-money-field",
+    "description": "Money field powered by MoneyPHP for Filament 4",
     "type": "library",
     "license": "MIT",
     "autoload": {
         "psr-4": {
-            "Pelmered\\FilamentMoneyField\\": "src/"
+            "Bcash\\FilamentMoneyField\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Pelmered\\FilamentMoneyField\\Tests\\": "tests/",
-            "Workbench\\App\\": "workbench/app/",
-            "Workbench\\Database\\Factories\\": "workbench/database/factories/",
-            "Workbench\\Database\\Seeders\\": "workbench/database/seeders/"
+            "Bcash\\FilamentMoneyField\\Tests\\": "tests/"
         }
     },
     "authors": [
         {
             "name": "Peter Elmered",
             "email": "peter@elmered.com"
+        },
+        {
+            "name": "Brian Cash",
+            "email": "brian@alpine.io"
         }
     ],
     "minimum-stability": "dev",
@@ -26,71 +28,24 @@
     "require": {
         "php": "^8.2",
         "ext-intl": "*",
-        "filament/support": "^v4.0.0",
+        "filament/support": "^4.0",
         "moneyphp/money": "^4.0",
         "illuminate/support": "^11.24 | ^12",
-        "php-static-analysis/attributes": "^0.3.1 | ^0.4.0",
-        "pelmered/larapara": "dev-main"
+        "spatie/laravel-package-tools": "^1.16"
     },
     "require-dev": {
         "filament/filament": "^4.0",
         "orchestra/testbench": "^9.0",
         "nunomaduro/collision": "^8.0",
         "laravel/pint": "^1.16",
-        "pestphp/pest": "^3.0",
-        "pestphp/pest-plugin-type-coverage": "^3.0",
-        "larastan/larastan": "^3.0",
-        "php-static-analysis/phpstan-extension": "^0.4.0",
-        "spatie/laravel-ray": "^1.39",
-        "rector/rector": "^2.0"
-    },
-    "conflict": {
-        "phpstan/phpstan": "2.1.12"
+        "pestphp/pest": "^3.0"
     },
     "extra": {
         "laravel": {
             "providers": [
-                "Pelmered\\FilamentMoneyField\\FilamentMoneyFieldServiceProvider"
+                "Bcash\\FilamentMoneyField\\FilamentMoneyFieldServiceProvider"
             ]
         }
-    },
-    "scripts": {
-        "phpstan": "vendor/bin/phpstan analyse src --level=8 --memory-limit=-1",
-        "pint": "vendor/bin/pint",
-        "post-autoload-dump": [
-            "@clear",
-            "@prepare"
-        ],
-        "clear": "@php vendor/bin/testbench package:purge-skeleton --ansi",
-        "prepare": "@php vendor/bin/testbench package:discover --ansi",
-        "build": "@php vendor/bin/testbench workbench:build --ansi",
-        "serve": [
-            "Composer\\Config::disableProcessTimeout",
-            "@build",
-            "@php vendor/bin/testbench serve"
-        ],
-        "check" : [
-            "composer lint",
-            "composer test"
-        ],
-        "lint": [
-            "composer pint",
-            "composer phpstan"
-        ],
-        "fix": [
-            "composer pint --fix",
-            "vendor/bin/rector",
-            "composer phpstan --fix"
-        ],
-        "test": [
-            "@php vendor/bin/testbench package:test"
-        ],
-        "coverage": [
-            "@php vendor/bin/pest --testsuite=default --coverage-clover=coverage.xml --coverage-filter=src --path-coverage"
-        ],
-        "types": [
-            "@php vendor/bin/pest --type-coverage"
-        ]
     },
     "config": {
         "allow-plugins": {

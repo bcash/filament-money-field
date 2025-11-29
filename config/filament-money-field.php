@@ -3,54 +3,48 @@
 return [
     /*
     |---------------------------------------------------------------------------
-    | Default locale
+    | Default Currency
     |---------------------------------------------------------------------------
     |
-    | If not set, it will use the Laravel app locale.
-    | For example: en_US, en_GB, sv_SE, etc.
+    | The default currency code to use if not specified on the field.
+    | Uses ISO 4217 currency codes (e.g., USD, EUR, GBP).
+    |
+    */
+    'default_currency' => env('MONEY_DEFAULT_CURRENCY', 'USD'),
+
+    /*
+    |---------------------------------------------------------------------------
+    | Default Locale
+    |---------------------------------------------------------------------------
+    |
+    | The default locale for number formatting.
+    | Uses ICU locale format (e.g., en_US, en_GB, de_DE).
     |
     */
     'default_locale' => env('MONEY_DEFAULT_LOCALE', 'en_US'),
 
     /*
     |---------------------------------------------------------------------------
-    | Default currency
+    | Decimal Digits
     |---------------------------------------------------------------------------
     |
-    | The currency code to use if not set on the field.
-    |
-    */
-    'use_input_mask' => env('MONEY_USE_INPUT_MASK', false),
-
-    /*
-    |---------------------------------------------------------------------------
-    | Fraction digits
-    |---------------------------------------------------------------------------
-    |
-    | The currency code to use if not set on the field.
+    | The number of decimal places to display.
+    | Most currencies use 2 decimal places.
     |
     */
     'decimal_digits' => env('MONEY_DECIMAL_DIGITS', 2),
 
     /*
     |---------------------------------------------------------------------------
-    | Currency symbol placement
+    | Currency Symbol Placement
     |---------------------------------------------------------------------------
     |
-    | Where the unit should be on form fields. Options are 'before' (prefix), 'after' (suffix) or 'hidden'.
+    | Where the currency symbol should appear on form fields.
+    | Options: 'before' (prefix), 'after' (suffix), 'hidden'
+    |
     | Note: In most non-English speaking European countries,
-    | the currency symbol is after the amount and is preceded by a space (as in "10 €")
+    | the currency symbol is after the amount (e.g., "10 €")
     |
     */
-    'form_currency_symbol_placement' => env('MONEY_UNIT_PLACEMENT', 'before'),
-
-    /*
-    |---------------------------------------------------------------------------
-    | Currency switcher enabled on fields by default
-    |---------------------------------------------------------------------------
-    |
-    | Should the currency switcher be enabled on fields by default.
-    | You can change this on a per-field basis with ->currencySwitcherEnabled() and ->currencySwitcherDisabled().
-    */
-    'currency_switcher_enabled_default' => env('MONEY_CURRENCY_SWITCHER_ENABLED', true),
+    'form_currency_symbol_placement' => env('MONEY_SYMBOL_PLACEMENT', 'before'),
 ];
