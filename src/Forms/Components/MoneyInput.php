@@ -109,34 +109,4 @@ class MoneyInput extends TextInput
     {
         return $this->symbolPlacement('hidden');
     }
-
-    /**
-     * Set the minimum value in cents.
-     */
-    public function minValue(int $value): static
-    {
-        $this->minValue = $value;
-
-        return $this;
-    }
-
-    /**
-     * Set the maximum value in cents.
-     */
-    public function maxValue(int $value): static
-    {
-        $this->maxValue = $value;
-
-        return $this;
-    }
-
-    /**
-     * Set the step value for increment/decrement.
-     */
-    public function step(int $step): static
-    {
-        $this->step = $step;
-
-        return $this;
-    }
 }

@@ -20,12 +20,6 @@ trait HasMoneyAttributes
 
     protected ?int $decimals = null;
 
-    protected ?int $minValue = null;
-
-    protected ?int $maxValue = null;
-
-    protected ?int $step = null;
-
     /**
      * Get the currency for this component.
      * Defaults to USD if not set.
@@ -89,30 +83,6 @@ trait HasMoneyAttributes
     protected function getDecimals(): int
     {
         return $this->decimals ?? (int) config('filament-money-field.decimal_digits', 2);
-    }
-
-    /**
-     * Get the minimum value in cents.
-     */
-    public function getMinValue(): ?int
-    {
-        return $this->minValue;
-    }
-
-    /**
-     * Get the maximum value in cents.
-     */
-    public function getMaxValue(): ?int
-    {
-        return $this->maxValue;
-    }
-
-    /**
-     * Get the step value.
-     */
-    public function getStep(): ?int
-    {
-        return $this->step;
     }
 
     /**
